@@ -15,3 +15,11 @@ class MenuItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = MenuItem
         fields = ['id', 'title', 'price', 'stock', 'category', 'category_id']
+
+    def validate_price(self, value):
+        if value < 2:
+            raise serializers.ValidationError('Price should not be less than 2.0')
+
+    def validate_stock(self, value):
+        if value < 0:
+            raise serializers.ValidationError('Stock cannot be negative')
