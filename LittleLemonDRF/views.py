@@ -92,3 +92,46 @@ class MenuItemDetail(APIView):
         item.delete()
 
         return Response(status.HTTP_204_NO_CONTENT)
+
+
+class CategoryView(APIView):
+
+    def get(self, request, format=None):
+
+        categories = Category.objects.all()
+        category = request.query_params.get('category')
+        search = request.query_params.get('search')
+        ordering = request.query_params.get('ordering')
+        page = request.query_params.get('page', default=1)
+        perpage = request.query_params.get('perpage', default=10)
+
+        if category:
+            items = items.filter(title=category)
+
+        if search:
+            items = items.filter(title__startswith=search)
+
+        if ordering:
+            ordering_fields = ordering.split(",")
+            items = items.order_by(*ordering_fields)
+
+        paginator = Paginator(categories, per_page=perpage)
+        try:
+            categories = paginator.page(number=page)
+        except EmptyPage:
+            categories = []
+
+        categories_serialized = CategorySerializer(categories, many=True)
+
+        return Response(categories_serialized.data)
+
+    def post(self, request):
+
+        serializer = CategorySerializer(data=request.data)
+
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+
+            return Response(serializer.data, status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
